@@ -1,4 +1,3 @@
-from Crypto.Hash import Whirlpool
 import hashlib
 import sys
 
@@ -19,7 +18,6 @@ def identify_hash_algorithm(hash_str):
         hashlib.sha3_512,
         hashlib.shake_128,
         hashlib.shake_256,
-        Whirlpool.new,
         "blowfish",
         # Add more Hashcat-supported algorithms below
         "md4",
@@ -51,10 +49,7 @@ def identify_hash_algorithm(hash_str):
 
             # If decoding is successful, return the algorithm's name
             if decoded_hash == hash_str.lower():
-                if algorithm == Whirlpool.new:
-                    return "Whirlpool"
-                else:
-                    return algorithm().name
+                return algorithm().name
         except Exception as e:
             # Continue to the next algorithm if decoding fails
             continue
