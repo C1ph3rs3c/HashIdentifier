@@ -18,7 +18,6 @@ def identify_hash_algorithm(hash_str):
         ("sha3_512", hashlib.sha3_512),
         ("shake_128", hashlib.shake_128),
         ("shake_256", hashlib.shake_256),
-        ("blowfish", None),  # Blowfish is not a hashing algorithm
         # Add more Hashcat-supported algorithms below
         ("md4", None),
         ("md5(md5($pass))", None),
@@ -38,10 +37,6 @@ def identify_hash_algorithm(hash_str):
         if algorithm_func:
             try:
                 # Attempt to decode the hash using the current algorithm
-                if algorithm_func == hashlib.blowfish:
-                    # Blowfish is a cipher, not a hash function
-                    continue
-                
                 decoded_hash = algorithm_func(bytes.fromhex(hash_str)).hexdigest()
 
                 # If decoding is successful, return the algorithm's name
