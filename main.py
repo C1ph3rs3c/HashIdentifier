@@ -1,7 +1,6 @@
+from Crypto.Hash import Whirlpool
 import hashlib
-from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+import sys
 
 def identify_hash_algorithm(hash_str):
     # List of supported hashing algorithms
@@ -20,7 +19,7 @@ def identify_hash_algorithm(hash_str):
         hashlib.sha3_512,
         hashlib.shake_128,
         hashlib.shake_256,
-        hashlib.whirlpool,
+        Whirlpool.new,
         "blowfish",
         # Add more Hashcat-supported algorithms below
         "md4",
@@ -45,28 +44,40 @@ def identify_hash_algorithm(hash_str):
 
         try:
             # Attempt to decode the hash using the current algorithm
-            decoded_hash = algorithm(bytes.fromhex(hash_str)).hexdigest()
+            if callable(algorithm):
+                decoded_hash = algorithm(hash_str.encode()).hexdigest()
+            else:
+                decoded_hash = algorithm(bytes.fromhex(hash_str)).hexdigest()
 
             # If decoding is successful, return the algorithm's name
             if decoded_hash == hash_str.lower():
-                return algorithm().name
+                if algorithm == Whirlpool.new:
+                    return "Whirlpool"
+                else:
+                    return algorithm().name
         except Exception as e:
-            # Log the error (optional)
-            print(f"Error: {str(e)}")
+            # Continue to the next algorithm if decoding fails
+            continue
 
     # Return None if no matching algorithm is found
     return None
 
 def hash_identify(input_data):
-    try:
-        with open(input_data, "r") as file:
-            hashes = [line.strip() for line in file]
-    except FileNotFoundError:
-        print(f"Error: File '{input_data}' not found.")
+    if len(input_data) == 0:
+        print("Error: Input data is empty.")
         return
-    except Exception as e:
-        print(f"Error: {str(e)}")
-        return
+
+    # If input_data is a file, read hashes from the file
+    if input_data.endswith(".txt"):
+        try:
+            with open(input_data, "r") as file:
+                hashes = [line.strip() for line in file]
+        except FileNotFoundError:
+            print(f"Error: File '{input_data}' not found.")
+            return
+    else:
+        # If input_data is a single hash string
+        hashes = [input_data]
 
     for hash_str in hashes:
         algorithm = identify_hash_algorithm(hash_str)
@@ -75,17 +86,12 @@ def hash_identify(input_data):
         else:
             print(f"Hash: {hash_str} | Algorithm: Unknown")
 
-def print_help():
-    print("Usage: python hashIdentify.py <hash_string_or_file_path>")
-    print("\nOptions:")
-    print("  <hash_string_or_file_path> : Provide either a hash string or a file path containing hashes.")
-    print("  -h, --help                : Show this help message.")
-
 if __name__ == "__main__":
-    import sys
-
     if len(sys.argv) != 2 or sys.argv[1] in ['-h', '--help']:
-        print_help()
+        print("Usage: python hashIdentifier.py <hash_string_or_file_path>")
+        print("\nOptions:")
+        print("  <hash_string_or_file_path> : Provide either a hash string or a file path containing hashes.")
+        print("  -h, --help                : Show this help message.")
     else:
         input_data = sys.argv[1]
         hash_identify(input_data)
