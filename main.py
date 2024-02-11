@@ -4,55 +4,52 @@ import sys
 def identify_hash_algorithm(hash_str):
     # List of supported hashing algorithms
     algorithms = [
-        hashlib.md5,
-        hashlib.sha1,
-        hashlib.sha224,
-        hashlib.sha256,
-        hashlib.sha384,
-        hashlib.sha512,
-        hashlib.blake2b,
-        hashlib.blake2s,
-        hashlib.sha3_224,
-        hashlib.sha3_256,
-        hashlib.sha3_384,
-        hashlib.sha3_512,
-        hashlib.shake_128,
-        hashlib.shake_256,
-        "blowfish",
+        ("md5", hashlib.md5),
+        ("sha1", hashlib.sha1),
+        ("sha224", hashlib.sha224),
+        ("sha256", hashlib.sha256),
+        ("sha384", hashlib.sha384),
+        ("sha512", hashlib.sha512),
+        ("blake2b", hashlib.blake2b),
+        ("blake2s", hashlib.blake2s),
+        ("sha3_224", hashlib.sha3_224),
+        ("sha3_256", hashlib.sha3_256),
+        ("sha3_384", hashlib.sha3_384),
+        ("sha3_512", hashlib.sha3_512),
+        ("shake_128", hashlib.shake_128),
+        ("shake_256", hashlib.shake_256),
+        ("blowfish", None),  # Blowfish is not a hashing algorithm
         # Add more Hashcat-supported algorithms below
-        "md4",
-        "md5(md5($pass))",
-        "md5(md5($salt).$pass)",
-        "md5($pass.$salt)",
-        "md5($salt.$pass)",
-        "md5($salt.$pass.$salt)",
-        "md5($salt.md5($pass))",
-        "md5($salt.md5($pass.$salt))",
-        "md5($salt.md5($salt.$pass))",
-        "md5($salt.md5($salt.$pass.$salt))",
-        "md5($salt.sha1($pass))",
+        ("md4", None),
+        ("md5(md5($pass))", None),
+        ("md5(md5($salt).$pass)", None),
+        ("md5($pass.$salt)", None),
+        ("md5($salt.$pass)", None),
+        ("md5($salt.$pass.$salt)", None),
+        ("md5($salt.md5($pass))", None),
+        ("md5($salt.md5($pass.$salt))", None),
+        ("md5($salt.md5($salt.$pass))", None),
+        ("md5($salt.md5($salt.$pass.$salt))", None),
+        ("md5($salt.sha1($pass))", None),
         # Add more as needed
     ]
 
-    for algorithm in algorithms:
-        if algorithm == "blowfish":
-            # Blowfish is a symmetric cipher, not a hash function.
-            # So, we return "Blowfish" directly.
-            return "Blowfish"
+    for algorithm_name, algorithm_func in algorithms:
+        if algorithm_func:
+            try:
+                # Attempt to decode the hash using the current algorithm
+                if algorithm_func == hashlib.blowfish:
+                    # Blowfish is a cipher, not a hash function
+                    continue
+                
+                decoded_hash = algorithm_func(bytes.fromhex(hash_str)).hexdigest()
 
-        try:
-            # Attempt to decode the hash using the current algorithm
-            if callable(algorithm):
-                decoded_hash = algorithm(hash_str.encode()).hexdigest()
-            else:
-                decoded_hash = algorithm(bytes.fromhex(hash_str)).hexdigest()
-
-            # If decoding is successful, return the algorithm's name
-            if decoded_hash == hash_str.lower():
-                return algorithm().name
-        except Exception as e:
-            # Continue to the next algorithm if decoding fails
-            continue
+                # If decoding is successful, return the algorithm's name
+                if decoded_hash == hash_str.lower():
+                    return algorithm_name
+            except:
+                # Continue to the next algorithm if decoding fails
+                continue
 
     # Return None if no matching algorithm is found
     return None
