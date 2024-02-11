@@ -42,7 +42,7 @@ def identify_hash_algorithm(hash_str):
                 # If decoding is successful, return the algorithm's name
                 if decoded_hash == hash_str.lower():
                     return algorithm_name
-            except:
+            except Exception as e:
                 # Continue to the next algorithm if decoding fails
                 continue
 
@@ -50,7 +50,7 @@ def identify_hash_algorithm(hash_str):
     return None
 
 def hash_identify(input_data):
-    if len(input_data) == 0:
+    if not input_data:
         print("Error: Input data is empty.")
         return
 
